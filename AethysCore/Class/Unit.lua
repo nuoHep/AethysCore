@@ -23,7 +23,6 @@
   -- File Locals
   local _T = {                  -- Temporary Vars
     Parts,                        -- NPCID
-    ThisUnit,                     -- TTDRefresh
   };
 
   local function MakeUnitNamesTable(name, count)
@@ -712,8 +711,8 @@
       for Key, Value in pairs(TTD.Units) do -- TODO: Need to be optimized
         TTD._T.UnitFound = false;
         for i = 1, AC.MAXIMUM do
-          _T.ThisUnit = Unit[ NameplateUnitNames[i] ];
-          if Key == _T.ThisUnit:GUID() and _T.ThisUnit:Exists() then
+          local ThisUnit = Unit[ NameplateUnitNames[i] ];
+          if Key == ThisUnit:GUID() and ThisUnit:Exists() then
             TTD._T.UnitFound = true;
           end
         end
@@ -722,20 +721,20 @@
         end
       end
       for i = 1, AC.MAXIMUM do
-        _T.ThisUnit = Unit[ NameplateUnitNames[i] ];
-        if _T.ThisUnit:Exists() and Player:CanAttack(_T.ThisUnit) and _T.ThisUnit:Health() < _T.ThisUnit:MaxHealth() then
-          local guid = _T.ThisUnit:GUID()
-          if not TTD.Units[guid] or _T.ThisUnit:Health() > TTD.Units[guid][1][1][2] then
-            TTD.Units[guid] = {{}, _T.ThisUnit:MaxHealth(), AC.GetTime(), -1};
+        local ThisUnit = Unit[ NameplateUnitNames[i] ];
+        if ThisUnit:Exists() and Player:CanAttack(ThisUnit) and ThisUnit:Health() < ThisUnit:MaxHealth() then
+          local guid = ThisUnit:GUID()
+          if not TTD.Units[guid] or ThisUnit:Health() > TTD.Units[guid][1][1][2] then
+            TTD.Units[guid] = {{}, ThisUnit:MaxHealth(), AC.GetTime(), -1};
           end
           TTD._T.Values = TTD.Units[guid][1];
           TTD._T.Time = AC.GetTime() - TTD.Units[guid][3];
-          if _T.ThisUnit:Health() ~= TTD.Units[guid][4] then
-            tableinsert(TTD._T.Values, 1, {TTD._T.Time, _T.ThisUnit:Health()});
+          if ThisUnit:Health() ~= TTD.Units[guid][4] then
+            tableinsert(TTD._T.Values, 1, {TTD._T.Time, ThisUnit:Health()});
             while (#TTD._T.Values > TTD.Settings.HistoryCount) or (TTD._T.Time - TTD._T.Values[#TTD._T.Values][1] > TTD.Settings.HistoryTime) do
               tableremove(TTD._T.Values);
             end
-            TTD.Units[guid][4] = _T.ThisUnit:Health();
+            TTD.Units[guid][4] = ThisUnit:Health();
           end
         end
       end
