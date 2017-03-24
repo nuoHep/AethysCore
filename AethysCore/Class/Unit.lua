@@ -119,7 +119,8 @@
     [107556] = true -- Bound void Walker
   };
   function Unit:IsDummy ()
-    return self:NPCID() >= 0 and DummyUnits[self:NPCID()] == true;
+    local npcid = self:NPCID()
+    return npcid >= 0 and DummyUnits[npcid] == true;
   end
 
   -- Get the unit Health.
@@ -502,11 +503,12 @@
         [114881] = true
   }
   function Unit:IsBlacklisted ()
-    if SpecialBlacklistData[self:NPCID()] then
-      if type(SpecialBlacklistData[self:NPCID()]) == "boolean" then
+    local npcid = self:NPCID()
+    if SpecialBlacklistData[npcid] then
+      if type(SpecialBlacklistData[npcid]) == "boolean" then
         return true;
       else
-        return SpecialBlacklistData[self:NPCID()](self);
+        return SpecialBlacklistData[npcid](self);
       end
     end
     return false;
@@ -514,11 +516,12 @@
 
   -- Check if the unit is coded as blacklisted by the user or not.
   function Unit:IsUserBlacklisted ()
-    if AC.GUISettings.General.Blacklist.UserDefined[self:NPCID()] then
-      if type(AC.GUISettings.General.Blacklist.UserDefined[self:NPCID()]) == "boolean" then
+    local npcid = self:NPCID()
+    if AC.GUISettings.General.Blacklist.UserDefined[npcid] then
+      if type(AC.GUISettings.General.Blacklist.UserDefined[npcid]) == "boolean" then
         return true;
       else
-        return AC.GUISettings.General.Blacklist.UserDefined[self:NPCID()](self);
+        return AC.GUISettings.General.Blacklist.UserDefined[npcid](self);
       end
     end
     return false;
@@ -526,11 +529,12 @@
 
   -- Check if the unit is coded as blacklisted for cycling by the user or not.
   function Unit:IsUserCycleBlacklisted ()
-    if AC.GUISettings.General.Blacklist.CycleUserDefined[self:NPCID()] then
-      if type(AC.GUISettings.General.Blacklist.CycleUserDefined[self:NPCID()]) == "boolean" then
+    local npcid = self:NPCID()
+    if AC.GUISettings.General.Blacklist.CycleUserDefined[npcid] then
+      if type(AC.GUISettings.General.Blacklist.CycleUserDefined[npcid]) == "boolean" then
         return true;
       else
-        return AC.GUISettings.General.Blacklist.CycleUserDefined[self:NPCID()](self);
+        return AC.GUISettings.General.Blacklist.CycleUserDefined[npcid](self);
       end
     end
     return false;
@@ -569,11 +573,12 @@
         [76057] = true
   };
   function Unit:IsMfdBlacklisted ()
-    if SpecialMfdBlacklistData[self:NPCID()] then
-      if type(SpecialMfdBlacklistData[self:NPCID()]) == "boolean" then
+    local npcid = self:NPCID()
+    if SpecialMfdBlacklistData[npcid] then
+      if type(SpecialMfdBlacklistData[npcid]) == "boolean" then
         return true;
       else
-        return SpecialMfdBlacklistData[self:NPCID()](self);
+        return SpecialMfdBlacklistData[npcid](self);
       end
     end
     return false;
