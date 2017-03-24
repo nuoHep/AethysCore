@@ -40,11 +40,11 @@
   function Unit:Exists ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].Exists == nil then
-        Cache.UnitInfo[guid].Exists = UnitExists(self.UnitID) and UnitIsVisible(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.Exists == nil then
+        unitInfo.Exists = UnitExists(self.UnitID) and UnitIsVisible(self.UnitID);
       end
-      return Cache.UnitInfo[guid].Exists;
+      return unitInfo.Exists;
     end
     return nil;
   end
@@ -53,19 +53,19 @@
   function Unit:NPCID ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if not Cache.UnitInfo[guid].NPCID then
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if not unitInfo.NPCID then
         _T.Parts = {};
         for Part in string.gmatch(guid, "([^-]+)") do
           tableinsert(_T.Parts, Part);
         end
         if _T.Parts[1] == "Creature" or _T.Parts[1] == "Pet" or _T.Parts[1] == "Vehicle" then
-          Cache.UnitInfo[guid].NPCID = tonumber(_T.Parts[6]);
+          unitInfo.NPCID = tonumber(_T.Parts[6]);
         else
-          Cache.UnitInfo[guid].NPCID = -2;
+          unitInfo.NPCID = -2;
         end
       end
-      return Cache.UnitInfo[guid].NPCID;
+      return unitInfo.NPCID;
     end
     return -1;
   end
@@ -74,11 +74,11 @@
   function Unit:Level()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].UnitLevel == nil then
-        Cache.UnitInfo[guid].UnitLevel = UnitLevel(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.UnitLevel == nil then
+        unitInfo.UnitLevel = UnitLevel(self.UnitID);
       end
-      return Cache.UnitInfo[guid].UnitLevel;
+      return unitInfo.UnitLevel;
     end
     return nil;
   end
@@ -127,11 +127,11 @@
   function Unit:Health ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if not Cache.UnitInfo[guid].Health then
-        Cache.UnitInfo[guid].Health = UnitHealth(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if not unitInfo.Health then
+        unitInfo.Health = UnitHealth(self.UnitID);
       end
-      return Cache.UnitInfo[guid].Health;
+      return unitInfo.Health;
     end
     return -1;
   end
@@ -140,11 +140,11 @@
   function Unit:MaxHealth ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if not Cache.UnitInfo[guid].MaxHealth then
-        Cache.UnitInfo[guid].MaxHealth = UnitHealthMax(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if not unitInfo.MaxHealth then
+        unitInfo.MaxHealth = UnitHealthMax(self.UnitID);
       end
-      return Cache.UnitInfo[guid].MaxHealth;
+      return unitInfo.MaxHealth;
     end
     return -1;
   end
@@ -158,11 +158,11 @@
   function Unit:IsDeadOrGhost ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].IsDeadOrGhost == nil then
-        Cache.UnitInfo[guid].IsDeadOrGhost = UnitIsDeadOrGhost(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.IsDeadOrGhost == nil then
+        unitInfo.IsDeadOrGhost = UnitIsDeadOrGhost(self.UnitID);
       end
-      return Cache.UnitInfo[guid].IsDeadOrGhost;
+      return unitInfo.IsDeadOrGhost;
     end
     return nil;
   end
@@ -171,11 +171,11 @@
   function Unit:AffectingCombat ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].AffectingCombat == nil then
-        Cache.UnitInfo[guid].AffectingCombat = UnitAffectingCombat(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.AffectingCombat == nil then
+        unitInfo.AffectingCombat = UnitAffectingCombat(self.UnitID);
       end
-      return Cache.UnitInfo[guid].AffectingCombat;
+      return unitInfo.AffectingCombat;
     end
     return nil;
   end
@@ -185,12 +185,12 @@
     local guid = self:GUID()
     local oguid = Other:GUID()
     if guid and oguid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if not Cache.UnitInfo[guid].IsUnit then Cache.UnitInfo[guid].IsUnit = {}; end
-      if Cache.UnitInfo[guid].IsUnit[oguid] == nil then
-        Cache.UnitInfo[guid].IsUnit[oguid] = UnitIsUnit(self.UnitID, Other.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if not unitInfo.IsUnit then unitInfo.IsUnit = {}; end
+      if unitInfo.IsUnit[oguid] == nil then
+        unitInfo.IsUnit[oguid] = UnitIsUnit(self.UnitID, Other.UnitID);
       end
-      return Cache.UnitInfo[guid].IsUnit[oguid];
+      return unitInfo.IsUnit[oguid];
     end
     return nil;
   end
@@ -199,11 +199,11 @@
   function Unit:Classification ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].Classification == nil then
-        Cache.UnitInfo[guid].Classification = UnitClassification(self.UnitID);
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.Classification == nil then
+        unitInfo.Classification = UnitClassification(self.UnitID);
       end
-      return Cache.UnitInfo[guid].Classification;
+      return unitInfo.Classification;
     end
     return "";
   end
@@ -231,16 +231,16 @@
   function Unit:IsInRange (Distance)
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if not Cache.UnitInfo[guid].IsInRange then Cache.UnitInfo[guid].IsInRange = {}; end
-      if Cache.UnitInfo[guid].IsInRange[Distance] == nil then
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if not unitInfo.IsInRange then unitInfo.IsInRange = {}; end
+      if unitInfo.IsInRange[Distance] == nil then
         if type(Distance) == "number" then
-          Cache.UnitInfo[guid].IsInRange[Distance] = IsItemInRange(AC.IsInRangeItemTable[Distance], self.UnitID) or false;
+          unitInfo.IsInRange[Distance] = IsItemInRange(AC.IsInRangeItemTable[Distance], self.UnitID) or false;
         else
-          Cache.UnitInfo[guid].IsInRange[Distance] = IsSpellInRange(Distance:Name(), self.UnitID) or false;
+          unitInfo.IsInRange[Distance] = IsSpellInRange(Distance:Name(), self.UnitID) or false;
         end
       end
-      return Cache.UnitInfo[guid].IsInRange[Distance];
+      return unitInfo.IsInRange[Distance];
     end
     return nil;
   end
@@ -250,11 +250,11 @@
   function Unit:IsTanking (Other)
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].Tanked == nil then
-        Cache.UnitInfo[guid].Tanked = UnitThreatSituation(self.UnitID, Other.UnitID) and UnitThreatSituation(self.UnitID, Other.UnitID) >= 2 and true or false;
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.Tanked == nil then
+        unitInfo.Tanked = UnitThreatSituation(self.UnitID, Other.UnitID) and UnitThreatSituation(self.UnitID, Other.UnitID) >= 2 and true or false;
       end
-      return Cache.UnitInfo[guid].Tanked;
+      return unitInfo.Tanked;
     end
     return nil;
   end
@@ -262,9 +262,9 @@
   -- Get all the casting infos from an unit and put it into the Cache.
   function Unit:GetCastingInfo ()
     local guid = self:GUID()
-    if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
+    local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
     -- name, nameSubtext, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID
-    Cache.UnitInfo[guid].Casting = {UnitCastingInfo(self.UnitID)};
+    unitInfo.Casting = {UnitCastingInfo(self.UnitID)};
   end
 
   -- Get the Casting Infos from the Cache.
@@ -274,10 +274,11 @@
       if not Cache.UnitInfo[guid] or not Cache.UnitInfo[guid].Casting then
         self:GetCastingInfo();
       end
+      local unitInfo = Cache.UnitInfo[guid]
       if Index then
-        return Cache.UnitInfo[guid].Casting[Index];
+        return unitInfo.Casting[Index];
       else
-        return unpack(Cache.UnitInfo[guid].Casting);
+        return unpack(unitInfo.Casting);
       end
     end
     return nil;
@@ -301,8 +302,8 @@
   --- Get all the Channeling Infos from an unit and put it into the Cache.
   function Unit:GetChannelingInfo ()
     local guid = self:GUID()
-    if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-    Cache.UnitInfo[guid].Channeling = {UnitChannelInfo(self.UnitID)};
+    local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+    unitInfo.Channeling = {UnitChannelInfo(self.UnitID)};
   end
 
   -- Get the Channeling Infos from the Cache.
@@ -312,10 +313,11 @@
       if not Cache.UnitInfo[guid] or not Cache.UnitInfo[guid].Channeling then
         self:GetChannelingInfo();
       end
+      local unitInfo = Cache.UnitInfo[guid]
       if Index then
-        return Cache.UnitInfo[guid].Channeling[Index];
+        return unitInfo.Channeling[Index];
       else
-        return unpack(Cache.UnitInfo[guid].Channeling);
+        return unpack(unitInfo.Channeling);
       end
     end
     return nil;
@@ -378,12 +380,12 @@
   --- Get all the buffs from an unit and put it into the Cache.
   function Unit:GetBuffs ()
     local guid = self:GUID()
-    if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-    Cache.UnitInfo[guid].Buffs = {};
+    local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+    unitInfo.Buffs = {};
     for i = 1, AC.MAXIMUM do
       _T.Infos = {UnitBuff(self.UnitID, i)};
       if not _T.Infos[11] then break; end
-      tableinsert(Cache.UnitInfo[guid].Buffs, _T.Infos);
+      tableinsert(unitInfo.Buffs, _T.Infos);
     end
   end
 
@@ -394,13 +396,14 @@
       if not Cache.UnitInfo[guid] or not Cache.UnitInfo[guid].Buffs then
         self:GetBuffs();
       end
-      for i = 1, #Cache.UnitInfo[guid].Buffs do
-        if Spell:ID() == Cache.UnitInfo[guid].Buffs[i][11] then
-          if AnyCaster or (Cache.UnitInfo[guid].Buffs[i][8] and Player:IsUnit(Unit(Cache.UnitInfo[guid].Buffs[i][8]))) then
+      local unitInfo = Cache.UnitInfo[guid]
+      for i = 1, #unitInfo.Buffs do
+        if Spell:ID() == unitInfo.Buffs[i][11] then
+          if AnyCaster or (unitInfo.Buffs[i][8] and Player:IsUnit(Unit(unitInfo.Buffs[i][8]))) then
             if Index then
-              return Cache.UnitInfo[guid].Buffs[i][Index];
+              return unitInfo.Buffs[i][Index];
             else
-              return unpack(Cache.UnitInfo[guid].Buffs[i]);
+              return unpack(unitInfo.Buffs[i]);
             end
           end
         end
@@ -434,12 +437,12 @@
   --- Get all the debuffs from an unit and put it into the Cache.
   function Unit:GetDebuffs ()
     local guid = self:GUID()
-    if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-    Cache.UnitInfo[guid].Debuffs = {};
+    local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+    unitInfo.Debuffs = {};
     for i = 1, AC.MAXIMUM do
       _T.Infos = {UnitDebuff(self.UnitID, i)};
       if not _T.Infos[11] then break; end
-      tableinsert(Cache.UnitInfo[guid].Debuffs, _T.Infos);
+      tableinsert(unitInfo.Debuffs, _T.Infos);
     end
   end
 
@@ -450,13 +453,14 @@
       if not Cache.UnitInfo[guid] or not Cache.UnitInfo[guid].Debuffs then
         self:GetDebuffs();
       end
-      for i = 1, #Cache.UnitInfo[guid].Debuffs do
-        if Spell:ID() == Cache.UnitInfo[guid].Debuffs[i][11] then
-          if AnyCaster or (Cache.UnitInfo[guid].Debuffs[i][8] and Player:IsUnit(Unit(Cache.UnitInfo[guid].Debuffs[i][8]))) then
+      local unitInfo = Cache.UnitInfo[guid]
+      for i = 1, #unitInfo.Debuffs do
+        if Spell:ID() == unitInfo.Debuffs[i][11] then
+          if AnyCaster or (unitInfo.Debuffs[i][8] and Player:IsUnit(Unit(unitInfo.Debuffs[i][8]))) then
             if Index then
-              return Cache.UnitInfo[guid].Debuffs[i][Index];
+              return unitInfo.Debuffs[i][Index];
             else
-              return unpack(Cache.UnitInfo[guid].Debuffs[i]);
+              return unpack(unitInfo.Debuffs[i]);
             end
           end
         end
@@ -627,11 +631,11 @@
   function Unit:IsStunned ()
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].IsStunned == nil then
-        Cache.UnitInfo[guid].IsStunned = self:IterateStunDebuffs();
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.IsStunned == nil then
+        unitInfo.IsStunned = self:IterateStunDebuffs();
       end
-      return Cache.UnitInfo[guid].IsStunned;
+      return unitInfo.IsStunned;
     end
     return nil;
   end
@@ -651,11 +655,11 @@
     -- TODO: Add DR Check
     local guid = self:GUID()
     if guid then
-      if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-      if Cache.UnitInfo[guid].IsStunnable == nil then
-        Cache.UnitInfo[guid].IsStunnable = IsStunnableClassification[self:Classification()];
+      local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+      if unitInfo.IsStunnable == nil then
+        unitInfo.IsStunnable = IsStunnableClassification[self:Classification()];
       end
-      return Cache.UnitInfo[guid].IsStunnable;
+      return unitInfo.IsStunnable;
     end
     return nil;
   end
@@ -840,12 +844,12 @@
       local guid = self:GUID()
       if guid then
         TTD._T.MinSamples = MinSamples or 3;
-        if not Cache.UnitInfo[guid] then Cache.UnitInfo[guid] = {}; end
-        if not Cache.UnitInfo[guid].TTD then Cache.UnitInfo[guid].TTD = {}; end
-        if not Cache.UnitInfo[guid].TTD[TTD._T.MinSamples] then
-          Cache.UnitInfo[guid].TTD[TTD._T.MinSamples] = self:TimeToX(self:SpecialTTDPercentage(self:NPCID()), TTD._T.MinSamples)
+        local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
+        if not unitInfo.TTD then unitInfo.TTD = {}; end
+        if not unitInfo.TTD[TTD._T.MinSamples] then
+          unitInfo.TTD[TTD._T.MinSamples] = self:TimeToX(self:SpecialTTDPercentage(self:NPCID()), TTD._T.MinSamples)
         end
-        return Cache.UnitInfo[guid].TTD[TTD._T.MinSamples];
+        return unitInfo.TTD[TTD._T.MinSamples];
       end
       return 11111;
     end
