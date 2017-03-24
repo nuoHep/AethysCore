@@ -28,6 +28,13 @@
     ExpirationTime                -- BuffRemains / DebuffRemains
   };
 
+  local function MakeUnitNamesTable(name, count)
+    local tbl = {}
+    for i = 1, count do
+      tbl[i] = name .. i
+    end
+    return tbl
+  end
 
 --- ============================ CONTENT ============================
   -- Get the unit GUID.
@@ -84,9 +91,11 @@
   end
 
   -- Get if an unit with a given NPC ID is in the Boss list and has less HP than the given ones.
+  local BossUnitNames = MakeUnitNamesTable("Boss", 4)
   function Unit:IsInBossList (NPCID, HP)
-    for i = 1, 4 do
-      if Unit["Boss"..tostring(i)]:NPCID() == NPCID and Unit["Boss"..tostring(i)]:HealthPercentage() <= HP then
+    for i = 1, #BossUnitNames do
+      local unit = Units[ BossUnitNames[i] ];
+      if unit:NPCID() == NPCID and unit:HealthPercentage() <= HP then
         return true;
       end
     end
@@ -700,11 +709,12 @@
       Throttle = 0
     };
     local TTD = AC.TTD;
+    local NameplateUnitNames = MakeUnitNamesTable("Nameplate", AC.MAXIMUM)
     function AC.TTDRefresh ()
       for Key, Value in pairs(TTD.Units) do -- TODO: Need to be optimized
         TTD._T.UnitFound = false;
         for i = 1, AC.MAXIMUM do
-          _T.ThisUnit = Unit["Nameplate"..tostring(i)];
+          _T.ThisUnit = Unit[ NameplateUnitNames[i] ];
           if Key == _T.ThisUnit:GUID() and _T.ThisUnit:Exists() then
             TTD._T.UnitFound = true;
           end
@@ -714,7 +724,7 @@
         end
       end
       for i = 1, AC.MAXIMUM do
-        _T.ThisUnit = Unit["Nameplate"..tostring(i)];
+        _T.ThisUnit = Unit[ NameplateUnitNames[i] ];
         if _T.ThisUnit:Exists() and Player:CanAttack(_T.ThisUnit) and _T.ThisUnit:Health() < _T.ThisUnit:MaxHealth() then
           local guid = _T.ThisUnit:GUID()
           if not TTD.Units[guid] or _T.ThisUnit:Health() > TTD.Units[guid][1][1][2] then
