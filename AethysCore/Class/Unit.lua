@@ -24,7 +24,6 @@
   local _T = {                  -- Temporary Vars
     Parts,                        -- NPCID
     ThisUnit,                     -- TTDRefresh
-    Infos,                        -- GetBuffs / GetDebuffs
     ExpirationTime                -- BuffRemains / DebuffRemains
   };
 
@@ -392,9 +391,9 @@
     local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
     unitInfo.Buffs = {};
     for i = 1, AC.MAXIMUM do
-      _T.Infos = {UnitBuff(self.UnitID, i)};
-      if not _T.Infos[11] then break; end
-      tableinsert(unitInfo.Buffs, _T.Infos);
+      local info = { UnitBuff(self.UnitID, i) };
+      if not info[11] then break; end
+      unitInfo.Buffs[i] = info;
     end
   end
 
@@ -449,9 +448,9 @@
     local unitInfo = Cache.UnitInfo[guid] if not unitInfo then unitInfo = {} Cache.UnitInfo[guid] = unitInfo end
     unitInfo.Debuffs = {};
     for i = 1, AC.MAXIMUM do
-      _T.Infos = {UnitDebuff(self.UnitID, i)};
-      if not _T.Infos[11] then break; end
-      tableinsert(unitInfo.Debuffs, _T.Infos);
+      local info = { UnitDebuff(self.UnitID, i) };
+      if not info[11] then break; end
+      unitInfo.Debuffs[i] = info;
     end
   end
 
