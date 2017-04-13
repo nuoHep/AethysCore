@@ -191,24 +191,29 @@
     -- Player Inspector
     -- TODO : Split based on events
     AC:RegisterForEvent(
-      function ()
+      function (Event, Arg1)
+        -- Prevent execute if not initiated by the player
+        if Event == "PLAYER_SPECIALIZATION_CHANGED" and Arg1 ~= "player" then
+          return;
+        end
+
         -- Refresh Player
-          Cache.Persistent.Player.Class = {UnitClass("player")};
-          Cache.Persistent.Player.Spec = {GetSpecializationInfo(GetSpecialization())};
+        Cache.Persistent.Player.Class = {UnitClass("player")};
+        Cache.Persistent.Player.Spec = {GetSpecializationInfo(GetSpecialization())};
 
         -- Wipe the texture from Persistent Cache
-          wipe(Cache.Persistent.Texture.Spell);
-          wipe(Cache.Persistent.Texture.Item);
+        wipe(Cache.Persistent.Texture.Spell);
+        wipe(Cache.Persistent.Texture.Item);
 
         -- Refresh Gear
-          AC.GetEquipment();
+        AC.GetEquipment();
         -- WoD (They are working but not used, so I'll comment them)
-          --AC.Tier18_2Pc, AC.Tier18_4Pc = AC.HasTier("T18");
-          --AC.Tier18_ClassTrinket = AC.HasTier("T18_ClassTrinket");
+        --AC.Tier18_2Pc, AC.Tier18_4Pc = AC.HasTier("T18");
+        --AC.Tier18_ClassTrinket = AC.HasTier("T18_ClassTrinket");
         -- Legion
-          Spell:ArtifactScan();
-          AC.Tier19_2Pc, AC.Tier19_4Pc = AC.HasTier("T19");
-          AC.Tier20_2Pc, AC.Tier20_4Pc = AC.HasTier("T20");
+        Spell:ArtifactScan();
+        AC.Tier19_2Pc, AC.Tier19_4Pc = AC.HasTier("T19");
+        AC.Tier20_2Pc, AC.Tier20_4Pc = AC.HasTier("T20");
       end
       , "ZONE_CHANGED_NEW_AREA"
       , "PLAYER_SPECIALIZATION_CHANGED"
@@ -219,7 +224,12 @@
   -- Spell Book Scanner
     -- Checks the same event as Blizzard Spell Book, from SpellBookFrame_OnLoad in SpellBookFrame.lua
     AC:RegisterForEvent(
-      function ()
+      function (Event, Arg1)
+        -- Prevent execute if not initiated by the player
+        if Event == "PLAYER_SPECIALIZATION_CHANGED" and Arg1 ~= "player" then
+          return;
+        end
+
         wipe(Cache.Persistent.SpellLearned.Player);
         wipe(Cache.Persistent.SpellLearned.Pet);
         Spell:BookScan();

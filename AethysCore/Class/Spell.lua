@@ -19,10 +19,6 @@
   local unpack = unpack;
   local wipe = table.wipe;
   -- File Locals
-  local _T = {                  -- Temporary Vars
-    Charges, MaxCharges,          -- Cooldown / Recharge
-    CDTime, CDValue, CD           -- Cooldown / Recharge
-  };
 
 
 --- ============================ CONTENT ============================
@@ -239,13 +235,56 @@
       return self:IsLearned() and not self:IsOnCooldown();
     end
 
+    -- Get the ChargesInfo (from GetSpellCharges) and cache it.
+    function Spell:GetChargesInfo ()
+      if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
+      -- charges, maxCharges, chargeStart, chargeDuration, chargeModRate
+      Cache.SpellInfo[self.SpellID].Charges = {GetSpellCharges(self.SpellID)};
+    end
+
+    -- Get the ChargesInfos from the Cache.
+    function Spell:ChargesInfo (Index)
+      if not Cache.SpellInfo[self.SpellID] or not Cache.SpellInfo[self.SpellID].Charges then
+        self:GetChargesInfo();
+      end
+      if Index then
+        return Cache.SpellInfo[self.SpellID].Charges[Index];
+      else
+        return unpack(Cache.SpellInfo[self.SpellID].Charges);
+      end
+    end
+
     -- Get the CooldownInfo (from GetSpellCooldown) and cache it.
     function Spell:CooldownInfo ()
       if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
       if not Cache.SpellInfo[self.SpellID].CooldownInfo then
+        -- start, duration, enable, modRate
         Cache.SpellInfo[self.SpellID].CooldownInfo = {GetSpellCooldown(self.SpellID)};
       end
       return unpack(Cache.SpellInfo[self.SpellID].CooldownInfo);
+    end
+
+    -- Computes any spell cooldown.
+    function Spell:ComputeCooldown (BypassRecovery, Type)
+      local Charges, MaxCharges, CDTime, CDValue;
+      if Type == "Charges" then
+        -- Get spell recharge infos
+        Charges, MaxCharges, CDTime, CDValue = self:ChargesInfo();
+        -- Return 0 if the spell has already all its charges.
+        if Charges == MaxCharges then return 0; end
+      else
+        -- Get spell cooldown infos
+        CDTime, CDValue = self:CooldownInfo();
+        -- Return 0 if the spell isn't in CD.
+        if CDTime == 0 then return 0; end
+      end
+      -- Compute the CD.
+      local CD = CDTime + CDValue - AC.GetTime() - (BypassRecovery and 0 or AC.RecoveryOffset());
+      -- Return the Spell CD
+      return CD > 0 and CD or 0;
+    end
+    function Spell:ComputeChargesCooldown (BypassRecovery)
+      return self:ComputeCooldown(BypassRecovery, "Charges");
     end
 
     -- Get the CostInfo (from GetSpellPowerCost) and cache it.
@@ -253,31 +292,38 @@
       if not Key or type(Key) ~= "string" then error("Invalid Key."); end
       if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
       if not Cache.SpellInfo[self.SpellID].CostInfo then
+        -- hasRequiredAura, type, name, cost, minCost, requiredAuraID, costPercent, costPerSec
         Cache.SpellInfo[self.SpellID].CostInfo = GetSpellPowerCost(self.SpellID)[1];
       end
       return Cache.SpellInfo[self.SpellID].CostInfo[Key];
     end
 
     --- Artifact Traits Scan
-    -- Fills the PowerTable with every traits informations.
+    -- Get every traits informations and stores them.
     local ArtifactUI, HasArtifactEquipped  = _G.C_ArtifactUI, _G.HasArtifactEquipped;
     local ArtifactFrame = _G.ArtifactFrame;
-    local PowerTable, Powers = {}, {};
-    --- PowerTable Schema :
-    --   1    2      3       4      5     6  7    8       9      10      11
-    -- SpellID, Cost, CurrentRank, MaxRank, BonusRanks, x, y, PreReqsMet, IsStart, IsGoldMedal, IsFinal
+    local Powers, PowerTableByPowerID, PowerTableBySpellID = {}, {}, {};
+    --local PowerTable = {}; -- Uncomment for debug purpose in case they changes the Artifact API
     function Spell:ArtifactScan ()
       ArtifactFrame = _G.ArtifactFrame;
-      -- Does the scan only if the Artifact is Equipped and the Frame not Opened.
+      -- Does the scan only if the artifact is equipped and the artifact frame not opened.
       if HasArtifactEquipped() and not (ArtifactFrame and ArtifactFrame:IsShown()) then
-        -- Unregister the events to prevent unwanted call.
+        -- Unregister the event to prevent unwanted call(s).
         UIParent:UnregisterEvent("ARTIFACT_UPDATE");
         SocketInventoryItem(INVSLOT_MAINHAND);
         Powers = ArtifactUI.GetPowers();
         if Powers then
-          wipe(PowerTable);
+          --wipe(PowerTable);
+          wipe(PowerTableByPowerID);
+          wipe(PowerTableBySpellID);
+          local PowerInfo;
           for Index, Power in pairs(Powers) do
-            tableinsert(PowerTable, {ArtifactUI.GetPowerInfo(Power)});
+            -- GetPowerInfo() returns a table and not multiple values unlike most WoW API.
+            -- offset, prereqsMet, cost, bonusRanks, maxRanks, linearIndex, position, isFinal, numMaxRankBonusFromTier, tier, isGoldMedal, isStart, currentRank, spellID
+            PowerInfo = ArtifactUI.GetPowerInfo(Power);
+            --tableinsert(PowerTable, PowerInfo);
+            PowerTableByPowerID[Power] = PowerInfo;
+            PowerTableBySpellID[PowerInfo.spellID] = PowerInfo;
           end
         end
         ArtifactUI.Clear();
@@ -303,88 +349,106 @@
 
     -- action.foo.charges or cooldown.foo.charges
     function Spell:Charges ()
-      if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
-      if not Cache.SpellInfo[self.SpellID].Charges then
-        Cache.SpellInfo[self.SpellID].Charges = {GetSpellCharges(self.SpellID)};
-      end
-      return unpack(Cache.SpellInfo[self.SpellID].Charges);
+      return self:ChargesInfo(1);
+    end
+
+    -- action.foo.max_charges or cooldown.foo..max_charges
+    function Spell:MaxCharges ()
+      return self:ChargesInfo(2);
     end
 
     -- action.foo.recharge_time or cooldown.foo.recharge_time
-    function Spell:Recharge ()
+    function Spell:Recharge (BypassRecovery)
       if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
-      if not Cache.SpellInfo[self.SpellID].Recharge then
-        -- Get Spell Recharge Infos
-        _T.Charges, _T.MaxCharges, _T.CDTime, _T.CDValue = self:Charges();
-        -- Return 0 if the Spell isn't in CD.
-        if _T.Charges == _T.MaxCharges then
-          return 0;
+      if (not BypassRecovery and not Cache.SpellInfo[self.SpellID].Recharge)
+        or (BypassRecovery and not Cache.SpellInfo[self.SpellID].RechargeNoRecovery) then
+        if BypassRecovery then
+          Cache.SpellInfo[self.SpellID].RechargeNoRecovery = self:ComputeChargesCooldown(BypassRecovery);
+        else
+          Cache.SpellInfo[self.SpellID].Recharge = self:ComputeChargesCooldown();
         end
-        -- Compute the CD.
-        _T.CD = _T.CDTime + _T.CDValue - AC.GetTime() - AC.RecoveryOffset();
-        -- Return the Spell CD
-        Cache.SpellInfo[self.SpellID].Recharge = _T.CD > 0 and _T.CD or 0;
       end
       return Cache.SpellInfo[self.SpellID].Recharge;
     end
 
     -- action.foo.charges_fractional or cooldown.foo.charges_fractional
     -- TODO : Changes function to avoid using the cache directly
-    function Spell:ChargesFractional ()
+    function Spell:ChargesFractional (BypassRecovery)
       if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
-      if not Cache.SpellInfo[self.SpellID].ChargesFractional then
-        self:Charges(); -- Cache the charges infos to use the cache directly after. 
-        if Cache.SpellInfo[self.SpellID].Charges[1] == Cache.SpellInfo[self.SpellID].Charges[2] then
-          Cache.SpellInfo[self.SpellID].ChargesFractional = Cache.SpellInfo[self.SpellID].Charges[1];
+      if (not BypassRecovery and not Cache.SpellInfo[self.SpellID].ChargesFractional)
+        or (BypassRecovery and not Cache.SpellInfo[self.SpellID].ChargesFractionalNoRecovery) then
+        if self:Charges() == self:MaxCharges() then
+          if BypassRecovery then
+            Cache.SpellInfo[self.SpellID].ChargesFractionalNoRecovery = self:Charges();
+          else
+            Cache.SpellInfo[self.SpellID].ChargesFractional = self:Charges();
+          end
         else
-          Cache.SpellInfo[self.SpellID].ChargesFractional = Cache.SpellInfo[self.SpellID].Charges[1] + (Cache.SpellInfo[self.SpellID].Charges[4]-self:Recharge())/Cache.SpellInfo[self.SpellID].Charges[4];
+          -- charges + (chargeDuration - recharge) / chargeDuration
+          if BypassRecovery then
+            Cache.SpellInfo[self.SpellID].ChargesFractionalNoRecovery = self:Charges() + (self:ChargesInfo(4)-self:Recharge(BypassRecovery))/self:ChargesInfo(4);
+          else
+            Cache.SpellInfo[self.SpellID].ChargesFractional = self:Charges() + (self:ChargesInfo(4)-self:Recharge())/self:ChargesInfo(4);
+          end
         end
       end
       return Cache.SpellInfo[self.SpellID].ChargesFractional;
     end
 
+    -- action.foo.full_recharge_time or cooldown.foo.charges_full_recharge_time
+    function Spell:FullRechargeTime ()
+      return self:MaxCharges() - self:ChargesFractional() * self:Recharge();
+    end
+
     -- cooldown.foo.remains
-    -- TODO: Swap Cooldown() to CooldownRemains() and then make a Cooldown() for cooldown.foo.up (and keep IsOnCooldown() for !cooldown.foo.up)
-    function Spell:Cooldown (BypassRecovery)
+    function Spell:CooldownRemains (BypassRecovery)
       if not Cache.SpellInfo[self.SpellID] then Cache.SpellInfo[self.SpellID] = {}; end
-      if (not BypassRecovery and not Cache.SpellInfo[self.SpellID].Cooldown) or (BypassRecovery and not Cache.SpellInfo[self.SpellID].CooldownNoRecovery) then
-        -- Get Spell Cooldown Infos
-        _T.CDTime, _T.CDValue = GetSpellCooldown(self.SpellID);
-        -- Return 0 if the Spell isn't in CD.
-        if _T.CDTime == 0 then
-          return 0;
-        end
-        -- Compute the CD.
-        _T.CD = _T.CDTime + _T.CDValue - AC.GetTime() - (BypassRecovery and 0 or AC.RecoveryOffset());
+      if (not BypassRecovery and not Cache.SpellInfo[self.SpellID].Cooldown)
+        or (BypassRecovery and not Cache.SpellInfo[self.SpellID].CooldownNoRecovery) then
         if BypassRecovery then
-          -- Return the Spell CD
-          Cache.SpellInfo[self.SpellID].CooldownNoRecovery = _T.CD > 0 and _T.CD or 0;
+          Cache.SpellInfo[self.SpellID].CooldownNoRecovery = self:ComputeCooldown(BypassRecovery);
         else
-          -- Return the Spell CD
-          Cache.SpellInfo[self.SpellID].Cooldown = _T.CD > 0 and _T.CD or 0;
+          Cache.SpellInfo[self.SpellID].Cooldown = self:ComputeCooldown();
         end
       end
       return BypassRecovery and Cache.SpellInfo[self.SpellID].CooldownNoRecovery or Cache.SpellInfo[self.SpellID].Cooldown;
     end
 
-    -- !cooldown.foo.up
-    function Spell:IsOnCooldown (BypassRecovery)
+    -- Old cooldown.foo.remains
+    -- DEPRECATED
+    function Spell:Cooldown (BypassRecovery)
+      return self:CooldownRemains(BypassRecovery);
+    end
+
+    -- cooldown.foo.up
+    function Spell:CooldownUp (BypassRecovery)
+      return self:Cooldown(BypassRecovery) == 0;
+    end
+
+    -- "cooldown.foo.down"
+    -- Since it doesn't exists in SimC, I think it's better to use 'not Spell:CooldownUp' for consistency with APLs.
+    function Spell:CooldownDown (BypassRecovery)
       return self:Cooldown(BypassRecovery) ~= 0;
+    end
+
+    -- !cooldown.foo.up
+    -- DEPRECATED
+    function Spell:IsOnCooldown (BypassRecovery)
+      return self:CooldownDown(BypassRecovery);
     end
 
     -- artifact.foo.rank
     function Spell:ArtifactRank ()
-      if #PowerTable > 0 then
-        for Index, Table in pairs(PowerTable) do
-          if self.SpellID == Table[1] and Table[3] > 0 then
-            return Table[3];
-          end
-        end
-      end
-      return 0;
+      return PowerTableBySpellID[self.SpellID] and PowerTableBySpellID[self.SpellID].currentRank or 0;
+    end
+    function Spell:ArtifactRankPowerID ()
+      return PowerTableByPowerID[self.SpellID] and PowerTableByPowerID[self.SpellID].currentRank or 0;
     end
 
     -- artifact.foo.enabled
     function Spell:ArtifactEnabled ()
       return self:ArtifactRank() > 0;
+    end
+    function Spell:ArtifactEnabledPowerID ()
+      return self:ArtifactRankPowerID() > 0;
     end
